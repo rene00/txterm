@@ -4,10 +4,23 @@ dotenv: ['{{.HOME}}/.txterm.env']
 
 tasks:
   default:
+    deps: [sqlc:generate]
     cmds:
       - go build -o ./txterm ./cmd/txterm
       - ./txterm import --file $TEST_OFX
+
   sqlc:generate:
     dir: internal/db
     cmds:
       - sqlc generate
+
+  migrate:create:
+    desc: Create a new migration file
+    summary: |
+      Create a new migration file
+
+      Examples:
+
+        $ task migrate:create -- tx
+    cmds:
+      - migrate create -ext sql -dir internal/db/migrations -seq {{.CLI_ARGS}}

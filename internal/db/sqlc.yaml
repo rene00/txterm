@@ -3,7 +3,8 @@ sql:
   - engine: "sqlite"
     schema: "schema.sql"
     queries:
-      - "query.sql"
+      - "queries/import.sql"
+      - "queries/tx.sql"
     gen:
       go:
         package: "query"

@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"txterm/internal/store"
 
 	"github.com/aclindsa/ofxgo"
@@ -25,7 +27,6 @@ func importCmd(cli *cli) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("new store: %w", err)
 			}
-			fmt.Println(str)
 
 			f, err := os.Open(flags.File)
 			if err != nil {
@@ -39,10 +40,27 @@ func importCmd(cli *cli) *cobra.Command {
 			}
 
 			if stmt, ok := response.CreditCard[0].(*ofxgo.CCStatementResponse); ok {
-				fmt.Printf("Balance: %s %s (as of %s)\n", stmt.BalAmt, stmt.CurDef, stmt.DtAsOf)
-				for _, tran := range stmt.BankTranList.Transactions {
-					fmt.Printf("%s %-15s [TrnType:%s] [Name:%s] [ExtdName:%s] [Memo:%s]\n", tran.DtPosted.Time.Format("2006-01-02"), tran.TrnAmt.String(), tran.TrnType, tran.Name, tran.ExtdName, tran.Memo)
+
+				imprt, err := str.SaveImport(cmd.Context(), filepath.Base(f.Name()), stmt.BalAmt.Rat, stmt.DtAsOf.Time)
+				if err != nil {
+					return err
 				}
+
+				for _, tran := range stmt.BankTranList.Transactions {
+					_, err := str.SaveTransaction(cmd.Context(), tran.DtPosted.Time, tran.Memo.String(), tran.TrnAmt.Rat, *imprt)
+					var transactionError *store.TransactionError
+					switch {
+					case errors.As(err, &transactionError):
+						if transactionError.Code() == store.TransactionErrDuplicate {
+							continue
+						}
+						return err
+					case err != nil:
+						return err
+					}
+				}
+			} else {
+				return fmt.Errorf("file not supported")
 			}
 
 			return nil

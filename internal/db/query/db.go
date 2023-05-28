@@ -24,25 +24,41 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.createImportStmt, err = db.PrepareContext(ctx, createImport); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateImport: %w", err)
+	}
+	if q.createTxStmt, err = db.PrepareContext(ctx, createTx); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateTx: %w", err)
+	}
+	if q.getDuplicateTxStmt, err = db.PrepareContext(ctx, getDuplicateTx); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDuplicateTx: %w", err)
+	}
 	if q.getTxsStmt, err = db.PrepareContext(ctx, getTxs); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTxs: %w", err)
-	}
-	if q.insertTxStmt, err = db.PrepareContext(ctx, insertTx); err != nil {
-		return nil, fmt.Errorf("error preparing query InsertTx: %w", err)
 	}
 	return &q, nil
 }
 
 func (q *Queries) Close() error {
 	var err error
+	if q.createImportStmt != nil {
+		if cerr := q.createImportStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createImportStmt: %w", cerr)
+		}
+	}
+	if q.createTxStmt != nil {
+		if cerr := q.createTxStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createTxStmt: %w", cerr)
+		}
+	}
+	if q.getDuplicateTxStmt != nil {
+		if cerr := q.getDuplicateTxStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDuplicateTxStmt: %w", cerr)
+		}
+	}
 	if q.getTxsStmt != nil {
 		if cerr := q.getTxsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getTxsStmt: %w", cerr)
-		}
-	}
-	if q.insertTxStmt != nil {
-		if cerr := q.insertTxStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing insertTxStmt: %w", cerr)
 		}
 	}
 	return err
@@ -82,17 +98,21 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db           DBTX
-	tx           *sql.Tx
-	getTxsStmt   *sql.Stmt
-	insertTxStmt *sql.Stmt
+	db                 DBTX
+	tx                 *sql.Tx
+	createImportStmt   *sql.Stmt
+	createTxStmt       *sql.Stmt
+	getDuplicateTxStmt *sql.Stmt
+	getTxsStmt         *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:           tx,
-		tx:           tx,
-		getTxsStmt:   q.getTxsStmt,
-		insertTxStmt: q.insertTxStmt,
+		db:                 tx,
+		tx:                 tx,
+		createImportStmt:   q.createImportStmt,
+		createTxStmt:       q.createTxStmt,
+		getDuplicateTxStmt: q.getDuplicateTxStmt,
+		getTxsStmt:         q.getTxsStmt,
 	}
 }
