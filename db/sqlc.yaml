@@ -5,9 +5,11 @@ sql:
     queries:
       - "queries/import.sql"
       - "queries/tx.sql"
+      - "queries/account.sql"
+      - "queries/account_type.sql"
     gen:
       go:
         package: "query"
         out: "query"
-        emit_json_tags: true
-        emit_prepared_queries: true
+          # emit_json_tags: true
+          # emit_prepared_queries: true

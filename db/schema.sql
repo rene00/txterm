@@ -17,3 +17,19 @@ CREATE TABLE import (
     balance_amount_den INTEGER,
     date_as_of DATETIME
 );
+
+CREATE TABLE account (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    account_type_id INTEGER NOT NULL,
+    FOREIGN KEY (account_type_id) REFERENCES account_type(id),
+    UNIQUE(name, account_type_id)
+);
+
+CREATE TABLE account_type (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    UNIQUE(name)
+);
+

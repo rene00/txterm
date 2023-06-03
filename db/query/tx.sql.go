@@ -11,20 +11,20 @@ import (
 )
 
 const createTx = `-- name: CreateTx :one
-INSERT INTO tx (id, date_created, date_posted, memo, amount_num, amount_den, import_id) VALUES (null, ?, ?, ?, ?, ?, ?) RETURNING id, date_created, date_posted, memo, amount_num, amount_den, import_id
+INSERT INTO tx (id, date_created, date_posted, memo, amount_num, amount_den, import_id) VALUES (NULL, ?, ?, ?, ?, ?, ?) RETURNING id, date_created, date_posted, memo, amount_num, amount_den, import_id
 `
 
 type CreateTxParams struct {
-	DateCreated time.Time `json:"date_created"`
-	DatePosted  time.Time `json:"date_posted"`
-	Memo        string    `json:"memo"`
-	AmountNum   int64     `json:"amount_num"`
-	AmountDen   int64     `json:"amount_den"`
-	ImportID    int64     `json:"import_id"`
+	DateCreated time.Time
+	DatePosted  time.Time
+	Memo        string
+	AmountNum   int64
+	AmountDen   int64
+	ImportID    int64
 }
 
 func (q *Queries) CreateTx(ctx context.Context, arg CreateTxParams) (Tx, error) {
-	row := q.queryRow(ctx, q.createTxStmt, createTx,
+	row := q.db.QueryRowContext(ctx, createTx,
 		arg.DateCreated,
 		arg.DatePosted,
 		arg.Memo,
@@ -50,14 +50,14 @@ SELECT id, date_created, date_posted, memo, amount_num, amount_den, import_id FR
 `
 
 type GetDuplicateTxParams struct {
-	DatePosted time.Time `json:"date_posted"`
-	Memo       string    `json:"memo"`
-	AmountNum  int64     `json:"amount_num"`
-	AmountDen  int64     `json:"amount_den"`
+	DatePosted time.Time
+	Memo       string
+	AmountNum  int64
+	AmountDen  int64
 }
 
 func (q *Queries) GetDuplicateTx(ctx context.Context, arg GetDuplicateTxParams) ([]Tx, error) {
-	rows, err := q.query(ctx, q.getDuplicateTxStmt, getDuplicateTx,
+	rows, err := q.db.QueryContext(ctx, getDuplicateTx,
 		arg.DatePosted,
 		arg.Memo,
 		arg.AmountNum,
@@ -97,7 +97,7 @@ SELECT id, date_created, date_posted, memo, amount_num, amount_den, import_id FR
 `
 
 func (q *Queries) GetTxs(ctx context.Context) ([]Tx, error) {
-	rows, err := q.query(ctx, q.getTxsStmt, getTxs)
+	rows, err := q.db.QueryContext(ctx, getTxs)
 	if err != nil {
 		return nil, err
 	}

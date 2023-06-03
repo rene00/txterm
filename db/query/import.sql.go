@@ -17,15 +17,15 @@ RETURNING id, date_created, filename, balance_amount_num, balance_amount_den, da
 `
 
 type CreateImportParams struct {
-	DateCreated      time.Time     `json:"date_created"`
-	Filename         string        `json:"filename"`
-	BalanceAmountNum sql.NullInt64 `json:"balance_amount_num"`
-	BalanceAmountDen sql.NullInt64 `json:"balance_amount_den"`
-	DateAsOf         sql.NullTime  `json:"date_as_of"`
+	DateCreated      time.Time
+	Filename         string
+	BalanceAmountNum sql.NullInt64
+	BalanceAmountDen sql.NullInt64
+	DateAsOf         sql.NullTime
 }
 
 func (q *Queries) CreateImport(ctx context.Context, arg CreateImportParams) (Import, error) {
-	row := q.queryRow(ctx, q.createImportStmt, createImport,
+	row := q.db.QueryRowContext(ctx, createImport,
 		arg.DateCreated,
 		arg.Filename,
 		arg.BalanceAmountNum,
