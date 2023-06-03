@@ -7,10 +7,11 @@ tasks:
     deps: [sqlc:generate]
     cmds:
       - go build -o ./txterm ./cmd/txterm
-      - ./txterm import --file $TEST_OFX
+      - ./txterm import transactions --file $TEST_OFX
+      - ./txterm import accounts --gnucash-uri $TEST_GNUCASH_URI
 
   sqlc:generate:
-    dir: internal/db
+    dir: db
     cmds:
       - sqlc generate
 
@@ -23,4 +24,4 @@ tasks:
 
         $ task migrate:create -- tx
     cmds:
-      - migrate create -ext sql -dir internal/db/migrations -seq {{.CLI_ARGS}}
+      - migrate create -ext sql -dir db/migrations -seq {{.CLI_ARGS}}

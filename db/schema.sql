@@ -33,3 +33,19 @@ CREATE TABLE account_type (
     UNIQUE(name)
 );
 
+CREATE TABLE account_match (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    account_id INTEGER NOT NULL,
+    FOREIGN KEY (account_id) REFERENCES account(id),
+    UNIQUE(name)
+);
+
+CREATE TABLE account_match_filter (
+    id INTEGER PRIMARY KEY,
+    filter TEXT NOT NULL,
+    account_match_id INTEGER NOT NULL,
+    FOREIGN KEY (account_match_id) REFERENCES account_match(id),
+    UNIQUE(name, account_match_id)
+);

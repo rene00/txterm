@@ -16,6 +16,19 @@ type Account struct {
 	AccountTypeID int64
 }
 
+type AccountMatch struct {
+	ID          int64
+	Name        string
+	Description sql.NullString
+	AccountID   int64
+}
+
+type AccountMatchFilter struct {
+	ID             int64
+	Filter         string
+	AccountMatchID int64
+}
+
 type AccountType struct {
 	ID   int64
 	Name string

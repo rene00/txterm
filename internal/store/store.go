@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"txterm/internal/db"
-	"txterm/internal/db/query"
+	"txterm/db"
+	"txterm/db/query"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
@@ -22,6 +22,18 @@ import (
 const (
 	DBName = "txterm.db"
 )
+
+type Account struct {
+	ID          int64
+	Name        string
+	Description string
+	AccountType AccountType
+}
+
+type AccountType struct {
+	ID   int64
+	Name string
+}
 
 type Store struct {
 	db      *sql.DB
@@ -121,6 +133,71 @@ func ensureDir(dir string) error {
 		return fmt.Errorf("%q exists but is a file", dir)
 	}
 	return nil
+}
+
+func (s *Store) GetAccount(ctx context.Context, name, accountTypeName string) (Account, error) {
+	var account Account
+
+	ar, err := s.queries.GetAccount(ctx, query.GetAccountParams{
+		Name:   name,
+		Name_2: accountTypeName,
+	})
+	if err != nil {
+		return account, fmt.Errorf("failed account: %w", err)
+	}
+
+	account = Account{
+		ID:          ar.ID,
+		Name:        ar.Name,
+		Description: ar.Description.String,
+		AccountType: AccountType{
+			ID:   ar.AccountTypeID,
+			Name: ar.AccountTypeName,
+		},
+	}
+
+	return account, nil
+}
+
+func (s *Store) CreateAccount(ctx context.Context, name, description, accountTypeName string, parentAccountID int64) (Account, error) {
+	var account Account
+
+	at, err := s.queries.GetAccountType(ctx, accountTypeName)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		at, err = s.queries.CreateAccountType(ctx, accountTypeName)
+		if err != nil {
+			return account, fmt.Errorf("failed creating account type: %s, %w", accountTypeName, err)
+		}
+	case err != nil:
+		return account, fmt.Errorf("failed to get account type: %s, %w", accountTypeName, err)
+	}
+
+	account, err = s.GetAccount(ctx, name, accountTypeName)
+	switch {
+	case err == sql.ErrNoRows:
+		a, err := s.queries.CreateAccount(ctx, query.CreateAccountParams{
+			Name:          name,
+			Description:   sql.NullString{String: description, Valid: true},
+			AccountTypeID: at.ID,
+		})
+		if err != nil {
+			return account, fmt.Errorf("failed creating account: %s, %s, %w", name, at.Name, err)
+		}
+		account = Account{
+			ID:          a.ID,
+			Name:        a.Name,
+			Description: a.Description.String,
+			AccountType: AccountType{
+				ID:   at.ID,
+				Name: at.Name,
+			},
+		}
+	case err != nil:
+		return account, err
+	}
+
+	return account, nil
 }
 
 // SaveImport persists the import "run" to storage.

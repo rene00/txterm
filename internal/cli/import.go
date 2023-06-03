@@ -1,24 +1,85 @@
 package cli
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"txterm/internal/store"
 
 	"github.com/aclindsa/ofxgo"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/rene00/gnucash-sqlboiler/gnucash"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
 func importCmd(cli *cli) *cobra.Command {
+	var cmd = &cobra.Command{
+		Use: "import",
+	}
+
+	cmd.AddCommand(importTransactionsCmd(cli))
+	cmd.AddCommand(importAccountsCmd(cli))
+	return cmd
+}
+
+func importAccountsCmd(cli *cli) *cobra.Command {
+	var flags struct {
+		GnuCashURI string
+	}
+
+	var cmd = &cobra.Command{
+		Use: "accounts",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			_ = viper.BindPFlag("gnucash-uri", cmd.Flags().Lookup("gnucash-uri"))
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			str, err := store.New()
+			if err != nil {
+				return fmt.Errorf("new store: %w", err)
+			}
+
+			gnucashDB, err := sql.Open("sqlite3", flags.GnuCashURI)
+			if err != nil {
+				return fmt.Errorf("failed to open gnucash sqlite3: %w", err)
+			}
+			defer gnucashDB.Close()
+
+			boil.SetDB(gnucashDB)
+
+			gnucashAccounts, err := gnucash.Accounts(qm.Where("account_type!=?", "ROOT")).All(cmd.Context(), gnucashDB)
+			if err != nil {
+				return fmt.Errorf("failed to find gnucash accounts: %w", err)
+
+			}
+			for _, gnucashAccount := range gnucashAccounts {
+				account, err := str.CreateAccount(cmd.Context(), gnucashAccount.Name, gnucashAccount.Description.String, strings.ToLower(gnucashAccount.AccountType), 0)
+				if err != nil {
+					return fmt.Errorf("failed to create account: %w", err)
+				}
+				fmt.Println(account)
+			}
+
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&flags.GnuCashURI, "gnucash-uri", "", "Gnucash URI")
+	return cmd
+}
+
+func importTransactionsCmd(cli *cli) *cobra.Command {
 	var flags struct {
 		File string
 	}
 
 	var cmd = &cobra.Command{
-		Use: "import",
+		Use: "transactions",
 		PreRun: func(cmd *cobra.Command, args []string) {
 			_ = viper.BindPFlag("file", cmd.Flags().Lookup("file"))
 		},

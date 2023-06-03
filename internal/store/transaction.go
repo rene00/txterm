@@ -2,7 +2,7 @@ package store
 
 import (
 	"fmt"
-	"txterm/internal/db/query"
+	"txterm/db/query"
 )
 
 type Transaction struct {
