@@ -15,7 +15,7 @@ type cli struct {
 func Execute() {
 	cli := &cli{}
 	rootCmd := &cobra.Command{
-		Use: "mauve",
+		Use: "txterm",
 	}
 	rootCmd.PersistentFlags().BoolVar(&cli.debug, "debug", false, "Enable debug")
 
