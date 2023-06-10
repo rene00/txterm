@@ -20,6 +20,7 @@ func Execute() {
 	rootCmd.PersistentFlags().BoolVar(&cli.debug, "debug", false, "Enable debug")
 
 	rootCmd.AddCommand(importCmd(cli))
+	rootCmd.AddCommand(serveCmd(cli))
 
 	if err := rootCmd.ExecuteContext(context.TODO()); err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())

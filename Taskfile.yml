@@ -9,6 +9,7 @@ tasks:
       - go build -o ./txterm ./cmd/txterm
       - ./txterm import transactions --file $TEST_OFX
       - ./txterm import accounts --gnucash-uri $TEST_GNUCASH_URI
+      - ./txterm serve
 
   sqlc:generate:
     dir: db

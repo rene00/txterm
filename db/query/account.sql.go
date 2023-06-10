@@ -65,14 +65,14 @@ func (q *Queries) GetAccount(ctx context.Context, arg GetAccountParams) (GetAcco
 	return i, err
 }
 
-const listAccount = `-- name: ListAccount :many
+const listAccounts = `-- name: ListAccounts :many
 SELECT a.id AS id, a.name AS name, a.description AS description, at.id AS account_type_id, at.name AS account_type_name
 FROM account a LEFT JOIN account_type at
 ON a.account_type_id = at.id
 ORDER BY a.name
 `
 
-type ListAccountRow struct {
+type ListAccountsRow struct {
 	ID              int64
 	Name            string
 	Description     sql.NullString
@@ -80,15 +80,15 @@ type ListAccountRow struct {
 	AccountTypeName string
 }
 
-func (q *Queries) ListAccount(ctx context.Context) ([]ListAccountRow, error) {
-	rows, err := q.db.QueryContext(ctx, listAccount)
+func (q *Queries) ListAccounts(ctx context.Context) ([]ListAccountsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAccounts)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListAccountRow
+	var items []ListAccountsRow
 	for rows.Next() {
-		var i ListAccountRow
+		var i ListAccountsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,

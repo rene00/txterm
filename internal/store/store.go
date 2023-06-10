@@ -23,13 +23,6 @@ const (
 	DBName = "txterm.db"
 )
 
-type Account struct {
-	ID          int64
-	Name        string
-	Description string
-	AccountType AccountType
-}
-
 type AccountType struct {
 	ID   int64
 	Name string
@@ -147,10 +140,10 @@ func (s *Store) GetAccount(ctx context.Context, name, accountTypeName string) (A
 	}
 
 	account = Account{
-		ID:          ar.ID,
-		Name:        ar.Name,
-		Description: ar.Description.String,
-		AccountType: AccountType{
+		id:          ar.ID,
+		name:        ar.Name,
+		description: ar.Description.String,
+		accountType: AccountType{
 			ID:   ar.AccountTypeID,
 			Name: ar.AccountTypeName,
 		},
@@ -185,10 +178,10 @@ func (s *Store) CreateAccount(ctx context.Context, name, description, accountTyp
 			return account, fmt.Errorf("failed creating account: %s, %s, %w", name, at.Name, err)
 		}
 		account = Account{
-			ID:          a.ID,
-			Name:        a.Name,
-			Description: a.Description.String,
-			AccountType: AccountType{
+			id:          a.ID,
+			name:        a.Name,
+			description: a.Description.String,
+			accountType: AccountType{
 				ID:   at.ID,
 				Name: at.Name,
 			},
@@ -219,10 +212,43 @@ type Import struct {
 	query.Import
 }
 
+func (s *Store) ListAccounts(ctx context.Context) ([]Account, error) {
+	var accounts []Account
+	ars, err := s.queries.ListAccounts(ctx)
+	if err != nil {
+		return accounts, fmt.Errorf("list accounts: %w", err)
+	}
+	for _, ar := range ars {
+		account := Account{
+			id:          ar.ID,
+			name:        ar.Name,
+			description: ar.Description.String,
+			accountType: AccountType{
+				ID:   ar.AccountTypeID,
+				Name: ar.AccountTypeName,
+			},
+		}
+		accounts = append(accounts, account)
+	}
+	return accounts, nil
+}
+
+func (s *Store) ListTransactions(ctx context.Context) ([]Transaction, error) {
+	var transactions []Transaction
+	txs, err := s.queries.ListTxs(ctx)
+	if err != nil {
+		return transactions, fmt.Errorf("gettxs: %w", err)
+	}
+	for _, tx := range txs {
+		transactions = append(transactions, Transaction{tx})
+	}
+	return transactions, nil
+}
+
 // SaveTransaction persists the transaction to storage.
 //
-// Duplicates can occur within the same import. Duplicates that occur outside
-// of a single will not be persisted.
+// Duplicates can occur within the same import. Duplicates that occur
+// outside of a single will not be persisted.
 func (s *Store) SaveTransaction(ctx context.Context, datePosted time.Time, memo string, amount big.Rat, imprt Import) (*Transaction, error) {
 
 	duplicates, err := s.queries.GetDuplicateTx(ctx, query.GetDuplicateTxParams{DatePosted: datePosted, Memo: memo, AmountNum: amount.Num().Int64(), AmountDen: amount.Denom().Int64()})

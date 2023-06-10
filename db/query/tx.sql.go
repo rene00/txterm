@@ -92,12 +92,12 @@ func (q *Queries) GetDuplicateTx(ctx context.Context, arg GetDuplicateTxParams) 
 	return items, nil
 }
 
-const getTxs = `-- name: GetTxs :many
+const listTxs = `-- name: ListTxs :many
 SELECT id, date_created, date_posted, memo, amount_num, amount_den, import_id FROM tx ORDER BY id
 `
 
-func (q *Queries) GetTxs(ctx context.Context) ([]Tx, error) {
-	rows, err := q.db.QueryContext(ctx, getTxs)
+func (q *Queries) ListTxs(ctx context.Context) ([]Tx, error) {
+	rows, err := q.db.QueryContext(ctx, listTxs)
 	if err != nil {
 		return nil, err
 	}

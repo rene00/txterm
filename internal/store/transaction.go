@@ -2,11 +2,25 @@ package store
 
 import (
 	"fmt"
+	"math/big"
+	"strings"
 	"txterm/db/query"
 )
 
 type Transaction struct {
 	query.Tx
+}
+
+func (t Transaction) Date() string {
+	return t.Tx.DatePosted.Format("2006-01-02")
+}
+
+func (t Transaction) Memo() string {
+	return t.Tx.Memo
+}
+
+func (t Transaction) Amount() string {
+	return strings.TrimRight(strings.TrimRight(big.NewRat(t.Tx.AmountNum, t.Tx.AmountDen).FloatString(100), "0"), ".")
 }
 
 type TransactionError struct {

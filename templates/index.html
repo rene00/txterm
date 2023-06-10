@@ -1,0 +1,12 @@
+{{template "header.html"}}
+<h1 class="title">Transactions</h1>
+<table>
+{{ range .transactions }}
+  <tr>
+    <td> {{ .Date }} </td>
+    <td> {{ .Memo }} </td>
+    <td> {{ .Amount }} </td>
+  </tr>
+{{ end }}
+</table>
+{{template "footer.html"}}
