@@ -4,14 +4,20 @@ dotenv: ['{{.HOME}}/.txterm.env']
 
 tasks:
   default:
+    desc: Default task command used for development
     deps: [sqlc:generate]
     cmds:
+      - go mod tidy
       - go build -o ./txterm ./cmd/txterm
       - ./txterm import transactions --file $TEST_OFX
       - ./txterm import accounts --gnucash-uri $TEST_GNUCASH_URI
+      - ./txterm account list
 
   sqlc:generate:
     dir: db
+    desc: sql generate
+    summary: |
+      sqlc generate
     cmds:
       - sqlc generate
 
