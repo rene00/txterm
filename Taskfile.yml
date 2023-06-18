@@ -53,4 +53,4 @@ tasks:
     env:
       SQLITE3_DBNAME: "{{.SQLITE3_DBNAME}}"
     cmds:
-      - sqlboiler --config sqlboiler.toml sqlite3
+      - sqlboiler --config sqlboiler.toml --wipe sqlite3
