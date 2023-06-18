@@ -1,11 +1,36 @@
 {{template "header.html"}}
 <h1 class="title">Transactions</h1>
 <table>
-{{ range .transactions }}
+  <thead>
+    <tr>
+      <td>Date</td>
+      <td>Memo</td>
+      <td>Increase</td>
+    </tr>
+  </thead>
+{{ $transactions := .transactions }}
+{{ $accounts := .accounts }}
+{{ range $transaction := $transactions }}
   <tr>
-    <td> {{ .Date }} </td>
-    <td> {{ .Memo }} </td>
-    <td> {{ .Amount }} </td>
+    <td>{{ $transaction.Transaction.DateCreated.Format "2006-01-02" }}</td>
+    <td>{{ $transaction.Transaction.Memo }}</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>{{ $transaction.SourceAccount }}</td>
+    <td>{{ $transaction.Increase }}</td>
+  <tr>
+  <tr>
+    <td>
+    <td>
+      <select>
+        {{ range $account := $accounts }}
+        <option value="{{ .ID }}">{{ $account.Name }}</option>
+        {{ end }}
+      </select>
+    </td>
+    <td>{{ $transaction.Decrease }}</td>
   </tr>
 {{ end }}
 </table>
