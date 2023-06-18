@@ -3,25 +3,54 @@ version: '3'
 dotenv: ['{{.HOME}}/.txterm.env']
 
 tasks:
-  default:
-    deps: [sqlc:generate]
-    cmds:
+
+  build:
+    desc: build
+    cmds: 
       - go build -o ./txterm ./cmd/txterm
+
+  serve:
+    desc: serve
+    cmds: 
+      - ./txterm serve
+
+  default:
+    desc: Main dev target
+    deps: [build]
+    cmds:
+      - cmd: rm ~/.config/txterm/txterm.db
+        ignore_error: true
+      - task: migrate:up
+      - task: sqlboiler
+      - ./txterm import accounts --gnucash-uri $TEST_GNUCASH_URI
       - ./txterm import transactions --file $TEST_OFX
+      - ./txterm serve
+
+  import:accounts:
+    desc: Import transactions
+    deps: [build]
+    cmds:
       - ./txterm import accounts --gnucash-uri $TEST_GNUCASH_URI
 
-  sqlc:generate:
-    dir: db
+  import:transactions:
+    desc: Import transactions
+    deps: [build]
     cmds:
-      - sqlc generate
+      - ./txterm import transactions --file $TEST_OFX --source-account "$TEST_SOURCE_ACCOUNT" --debug
+
+  migrate:up:
+    desc: Run migrations on db
+    cmds:
+      - migrate -database "sqlite3:${HOME}/.config/txterm/txterm.db" -path db/migrations up
 
   migrate:create:
     desc: Create a new migration file
-    summary: |
-      Create a new migration file
-
-      Examples:
-
-        $ task migrate:create -- tx
     cmds:
       - migrate create -ext sql -dir db/migrations -seq {{.CLI_ARGS}}
+
+  sqlboiler:
+    desc: sqlboiler
+    env:
+      SQLITE3_DBNAME: "{{.SQLITE3_DBNAME}}"
+    cmds:
+      - sqlboiler --config sqlboiler.toml --wipe sqlite3

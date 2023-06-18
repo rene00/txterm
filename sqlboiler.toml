@@ -1,0 +1,26 @@
+output   = "db/model"
+pkgname  = "model"
+wipe     = true
+no-tests = true
+add-enum-types = true
+
+[sqlite3]
+blacklist = ["schema_migrations"]
+
+[aliases.tables.tx]
+up_plural     = "Transactions"
+up_singular   = "Transaction"
+down_plural   = "transactions"
+down_singular = "transaction"
+
+[aliases.tables.tx_import_run]
+up_plural     = "TransactionImportRuns"
+up_singular   = "TransactionImportRun"
+down_plural   = "transactionImportRuns"
+down_singular = "transcationImportRun"
+
+[aliases.tables.tx_import_run.columns]
+tx_id = "TransactionID"
+
+[aliases.tables.split.columns]
+tx_id = "TransactionID"
